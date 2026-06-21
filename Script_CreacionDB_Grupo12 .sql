@@ -14,7 +14,7 @@ DNI varchar(20) not null unique,
 Apellido varchar(50) not null,
 Nombre varchar(50) not null,
 Telefono varchar(20) not null,
-Email varchar(100) not null,
+Email varchar(100) not null unique,
 Direccion varchar(150)  null,
 FechaAlta date not null default getdate()
 )
