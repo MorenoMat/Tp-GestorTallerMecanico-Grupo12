@@ -145,6 +145,7 @@ constraint CK_TareasReparacion_Fechas
     check (fechaFin is null or fechaInicio is null or fechaFin >= fechaInicio)
 )
 go
+--TRIGGER 1
 -- luego de cambiar  estado de reparaciones a completada, 
 --te pone en fechaFin getdate()
 -- recuerden q inserted es para q solo modifique lo q el usuario acaba de update
@@ -162,6 +163,8 @@ WHERE i.estado = 'Completada';
 end
 end;
 go
+--TRIGGER 2
+--Acumula importe de presupuesto.
 CREATE TRIGGER TR_DetallePresupuesto_AcumularImporte
 ON dbo.DetallePresupuesto
 AFTER INSERT
@@ -172,3 +175,55 @@ BEGIN
     FROM dbo.Presupuestos P
     INNER JOIN inserted i ON P.idPresupuesto = i.idPresupuesto;
 END;
+
+
+
+--TRIGGER 3: TR_DescontarStock
+--Al insertar un detalle de presupuesto, descuenta automáticamente la cantidad del stock del repuesto.
+--Si el stock es insuficiente, cancela la operación.
+go
+create trigger TR_DescontarStock
+on dbo.DetallePresupuesto
+after insert
+as
+begin
+    -- verificar que haya stock suficiente
+    if exists (
+        select 1
+        from dbo.Repuestos r
+        inner join inserted i on i.idRepuesto = r.idRepuesto
+        where r.stock < i.cantidad
+    )
+    begin
+        raiserror('Stock insuficiente para uno o más repuestos del detalle.', 16, 1)
+        rollback transaction
+        return
+    end
+ 
+    -- descontar el stock
+    update dbo.Repuestos
+    set stock = stock - i.cantidad
+    from dbo.Repuestos r
+    inner join inserted i on i.idRepuesto = r.idRepuesto
+end
+go
+ 
+-- TRIGGER 4: TR_FinalizarPresupuesto
+-- Cuando una reparación pasa a estado 'Completada', actualiza automáticamente el estado del presupuesto
+-- asociado a 'Finalizado'.
+go
+create trigger TR_FinalizarPresupuesto
+on dbo.Reparaciones
+after update
+as
+begin
+    if update(estado)
+    begin
+        update dbo.Presupuestos
+        set estado = 'Finalizado'
+        from dbo.Presupuestos p
+        inner join inserted i on i.idPresupuesto = p.idPresupuesto
+        where i.estado = 'Completada'
+    end
+end
+go
