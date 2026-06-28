@@ -227,3 +227,77 @@ begin
     end
 end
 go
+
+
+-- STORE PROCEDURE REGISTAR PRESUPUESTO
+-- SI NO EXISTE EL CLIENTE LO CREA Y LE ASIGAN EL VEHICULO, ADEMAS CREA EL PRESUPUESTO
+CREATE PROCEDURE SP_RegistrarPresupuesto
+(
+    @DNI VARCHAR(20),
+    @Apellido VARCHAR(50),
+    @Nombre VARCHAR(50),
+    @Telefono VARCHAR(20),
+    @Email VARCHAR(100),
+    @Direccion VARCHAR(150),
+
+    @Patente VARCHAR(10),
+    @Marca VARCHAR(50),
+    @Modelo VARCHAR(50),
+    @Anio INT,
+    @Color VARCHAR(30),
+
+    @IdMecanico INT,
+    @FechaEstimadaFin DATE = NULL,
+    @Descripcion VARCHAR(400)
+)
+AS
+BEGIN
+SET NOCOUNT ON;
+
+BEGIN TRY
+BEGIN TRANSACTION;
+
+DECLARE @idCliente INT;
+DECLARE @idVehiculo INT;
+
+SELECT @idCliente = idCliente
+FROM dbo.Clientes
+WHERE DNI = @DNI;
+
+IF @idCliente IS NULL
+BEGIN
+INSERT INTO dbo.Clientes
+(DNI, Apellido, Nombre, Telefono, Email, Direccion)
+VALUES
+(@DNI, @Apellido, @Nombre, @Telefono, @Email, @Direccion);
+
+SET @idCliente = SCOPE_IDENTITY();
+END;
+
+SELECT @idVehiculo = idVehiculo
+FROM dbo.Vehiculos
+WHERE Patente = @Patente;
+
+ IF @idVehiculo IS NULL
+BEGIN
+INSERT INTO dbo.Vehiculos
+(idCliente, Patente, Marca, Modelo, Anio, Color)
+VALUES
+ (@idCliente, @Patente, @Marca, @Modelo, @Anio, @Color);
+
+SET @idVehiculo = SCOPE_IDENTITY();
+END;
+
+INSERT INTO dbo.Presupuestos
+(idVehiculo, idMecanico, FechaEstimadaFin, descripcion)
+VALUES
+(@idVehiculo, @IdMecanico, @FechaEstimadaFin, @Descripcion);
+
+COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+ROLLBACK TRANSACTION;
+THROW;
+END CATCH;
+END;
+GO
