@@ -4,9 +4,9 @@ go
 use TallerMecanico
 go
 
--- ============================================================
 -- TABLA: Clientes
--- ============================================================
+-- Responsable: Mauro Sinopoli
+    
 create table dbo.Clientes
 (
 idCliente int identity(1,1) primary key,
@@ -19,10 +19,9 @@ Direccion varchar(150) not null,
 FechaAlta date not null default getdate()
 )
 
--- ============================================================
 -- TABLA: Mecanicos
 -- Responsable: Mateo Nahuel Moreno
--- ============================================================
+
 create table dbo.Mecanicos
 (
 idMecanico int identity(1,1) primary key,
@@ -30,10 +29,9 @@ nombreMecanico varchar(50) not null,
 ApellidoMecanico varchar(50) not null
 )
 
--- ============================================================
 -- TABLA: Repuestos
 -- Responsable: Mateo Nahuel Moreno
--- ============================================================
+
 create table dbo.Repuestos
 (
 idRepuesto int identity(1,1) primary key,
@@ -43,10 +41,9 @@ precio decimal(10,2) not null default 0 check(precio >= 0),
 stock int not null check(stock >= 0)
 )
 
--- ============================================================
 -- TABLA: Vehiculos
 -- Responsable: Mauro Sinopoli
--- ============================================================
+
 create table dbo.Vehiculos
 (
 idVehiculo int identity(1,1) primary key,
@@ -60,9 +57,9 @@ FechaAlta date not null default getdate(),
 foreign key (idCliente) references dbo.Clientes (idCliente)
 )
 
--- ============================================================
 -- TABLA: Presupuestos
--- ============================================================
+-- Responsable: Franco Bianchetti
+    
 create table dbo.Presupuestos
 (
 idPresupuesto int identity(1,1) primary key,
@@ -80,9 +77,9 @@ constraint CK_Presupuestos_Fechas
 check (fechaEstimadaFin is null or fechaEstimadaFin >= fechaPresupuesto)
 )
 
--- ============================================================
 -- TABLA: Reparaciones
--- ============================================================
+-- Responsable: Franco Bianchetti
+    
 create table dbo.Reparaciones
 (
 idReparacion int identity(1,1) primary key,
@@ -98,9 +95,9 @@ constraint CK_Reparaciones_Fechas
 check (fechaFin is null or fechaFin >= fechaInicio)
 )
 
--- ============================================================
+
 -- TABLA: DetallePresupuesto
--- ============================================================
+
 create table dbo.DetallePresupuesto
 (
 idDetalle int identity(1,1) primary key,
@@ -145,10 +142,12 @@ constraint CK_TareasReparacion_Fechas
     check (fechaFin is null or fechaInicio is null or fechaFin >= fechaInicio)
 )
 go
+    
 --TRIGGER 1
 -- luego de cambiar  estado de reparaciones a completada, 
 --te pone en fechaFin getdate()
 -- recuerden q inserted es para q solo modifique lo q el usuario acaba de update
+    
 Create Trigger TR_ReparacionCompletaGuardaFechaFin 
 ON dbo.Reparaciones
 AFTER UPDATE 
@@ -163,8 +162,10 @@ WHERE i.estado = 'Completada';
 end
 end;
 go
+    
 --TRIGGER 2
 --Acumula importe de presupuesto.
+    
 CREATE TRIGGER TR_DetallePresupuesto_AcumularImporte
 ON dbo.DetallePresupuesto
 AFTER INSERT
@@ -176,10 +177,9 @@ BEGIN
     INNER JOIN inserted i ON P.idPresupuesto = i.idPresupuesto;
 END;
 
-
-
 -- TRIGGER 3: se dispara al aprobar el presupuesto!
 -- Descuenta stock de todos los detalles ya cargados!
+
 CREATE TRIGGER TR_DescontarStock_AlAprobar
 ON dbo.Presupuestos
 AFTER UPDATE
@@ -224,14 +224,15 @@ END;
 GO
  
 -- TRIGGER 4: se dispara al insertar un detalle nuevo a un presupuesto que ya esta aprobado desde antes.
--- Solo descuenta si el presupuesto ya está 'Aprobado'!
+-- Solo descuenta si el presupuesto ya está 'Aprobado'
+    
 go
 create trigger TR_DescontarStock_AlAgregarDetalle
 on dbo.DetallePresupuesto
 after insert
 as
 begin
-    -- verificar stock suficiente solo si el presupuesto está aprobado
+    -- Verificar stock suficiente solo si el presupuesto está aprobado
     if exists (
         select 1
         from dbo.Repuestos r
@@ -259,6 +260,7 @@ go
 
 -- STORE PROCEDURE REGISTAR PRESUPUESTO
 -- SI NO EXISTE EL CLIENTE LO CREA Y LE ASIGAN EL VEHICULO, ADEMAS CREA EL PRESUPUESTO
+    
 CREATE PROCEDURE SP_RegistrarPresupuesto
 (
     @DNI VARCHAR(20),
@@ -380,23 +382,88 @@ END CATCH
 END
 GO
 
+-- VISTA 1: VW_PresupuestosCompletos
+-- Muestra todos los presupuestos con datos del cliente,
+-- vehículo, mecánico, importe total y estado.
 
-
-
--- VISTA 3: VW_RepuestosStockBajo
--- Muestra los repuestos cuyo stock es menor o igual a 5.
-go
-create view VW_RepuestosStockBajo as
+create view VW_PresupuestosCompletos as
 select
-    idRepuesto,
-    nombreRepuesto,
-    descripcionRepuesto,
-    precio,
-    stock
-from dbo.Repuestos
-where stock <= 5
+    p.idPresupuesto,
+    p.fechaPresupuesto,
+    p.fechaEstimadaFin,
+    p.descripcion,
+    p.importeTotal,
+    p.estado,
+    c.Apellido + ', ' + c.Nombre       as nombreCliente,
+    c.Telefono,
+    c.Email,
+    v.Patente,
+    v.Marca,
+    v.Modelo,
+    v.Anio,
+    m.ApellidoMecanico + ', ' + m.nombreMecanico as nombreMecanico
+from dbo.Presupuestos p
+inner join dbo.Vehiculos  v on v.idVehiculo = p.idVehiculo
+inner join dbo.Clientes   c on c.idCliente  = v.idCliente
+inner join dbo.Mecanicos  m on m.idMecanico = p.idMecanico
 go
 
--- select * from VW_RepuestosStockBajo
--- select * from VW_RepuestosStockBajo order by stock asc
+-- VISTA 1: VW_PresupuestosCompletos
+-- Muestra todos los presupuestos con datos del cliente,
+-- vehículo, mecánico, importe total y estado.
 
+create view VW_PresupuestosCompletos as
+select
+    p.idPresupuesto,
+    p.fechaPresupuesto,
+    p.fechaEstimadaFin,
+    p.descripcion,
+    p.importeTotal,
+    p.estado,
+    c.Apellido + ', ' + c.Nombre       as nombreCliente,
+    c.Telefono,
+    c.Email,
+    v.Patente,
+    v.Marca,
+    v.Modelo,
+    v.Anio,
+    m.ApellidoMecanico + ', ' + m.nombreMecanico as nombreMecanico
+from dbo.Presupuestos p
+inner join dbo.Vehiculos  v on v.idVehiculo = p.idVehiculo
+inner join dbo.Clientes   c on c.idCliente  = v.idCliente
+inner join dbo.Mecanicos  m on m.idMecanico = p.idMecanico
+go
+    
+-- select * from VW_PresupuestosCompletos
+-- select * from VW_PresupuestosCompletos where estado = 'Pendiente'
+-- select * from VW_PresupuestosCompletos where estado = 'Aprobado'
+ 
+ 
+-- VISTA 2: VW_ReparacionesEnCurso
+-- Muestra las reparaciones activas ('En Progreso') con
+-- los mecánicos asignados, el vehículo y el cliente.
+
+go
+create view VW_ReparacionesEnCurso as
+select
+    r.idReparacion,
+    r.fechaInicio,
+    p.fechaEstimadaFin,
+    r.descripcionTrabajo,
+    c.Apellido + ', ' + c.Nombre       as nombreCliente,
+    c.Telefono,
+    v.Patente,
+    v.Marca,
+    v.Modelo,
+    m.ApellidoMecanico + ', ' + m.nombreMecanico as nombreMecanico
+from dbo.Reparaciones r
+inner join dbo.Presupuestos      p  on p.idPresupuesto = r.idPresupuesto
+inner join dbo.Vehiculos         v  on v.idVehiculo    = p.idVehiculo
+inner join dbo.Clientes          c  on c.idCliente     = v.idCliente
+inner join dbo.ReparacionMecanicos rm on rm.idReparacion = r.idReparacion
+inner join dbo.Mecanicos         m  on m.idMecanico    = rm.idMecanico
+where r.estado = 'En Progreso'
+go
+ 
+-- select * from VW_ReparacionesEnCurso
+-- select * from VW_ReparacionesEnCurso where Patente = 'AB123CD'
