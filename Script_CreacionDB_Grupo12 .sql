@@ -178,44 +178,53 @@ END;
 
 
 
--- TRIGGER 3: se dispara al aprobar el presupuesto
--- Descuenta stock de todos los detalles ya cargados
-go
-create trigger TR_DescontarStock_AlAprobar
-on dbo.Presupuestos
-after update
-as
-begin
-    if update(estado)
-    begin
-        -- verificar stock suficiente para todos los detalles existentes
-        if exists (
-            select 1
-            from dbo.DetallePresupuesto dp
-            inner join dbo.Repuestos r on r.idRepuesto = dp.idRepuesto
-            inner join inserted i on i.idPresupuesto = dp.idPresupuesto
-            where i.estado = 'Aprobado'
-            and r.stock < dp.cantidad
+-- TRIGGER 3: se dispara al aprobar el presupuesto!
+-- Descuenta stock de todos los detalles ya cargados!
+CREATE TRIGGER TR_DescontarStock_AlAprobar
+ON dbo.Presupuestos
+AFTER UPDATE
+AS
+BEGIN
+    IF UPDATE(estado)
+    BEGIN
+        -- Verificar stock solo cuando el estado pasa a Aprobado
+        IF EXISTS (
+            SELECT 1
+            FROM dbo.DetallePresupuesto dp
+            INNER JOIN dbo.Repuestos r
+                ON r.idRepuesto = dp.idRepuesto
+            INNER JOIN inserted i
+                ON i.idPresupuesto = dp.idPresupuesto
+            INNER JOIN deleted d
+                ON d.idPresupuesto = i.idPresupuesto
+            WHERE d.estado <> 'Aprobado'
+              AND i.estado = 'Aprobado'
+              AND r.stock < dp.cantidad
         )
-        begin
-            raiserror('Stock insuficiente para uno o más repuestos del presupuesto.', 16, 1)
-            rollback transaction
-            return
-        end
+        BEGIN
+            RAISERROR('Stock insuficiente para uno o más repuestos del presupuesto.',16,1)
+            ROLLBACK TRANSACTION
+            RETURN
+        END
+
+        -- Descontar stock
+        UPDATE r
+        SET r.stock = r.stock - dp.cantidad
+        FROM dbo.Repuestos r
+        INNER JOIN dbo.DetallePresupuesto dp
+            ON dp.idRepuesto = r.idRepuesto
+        INNER JOIN inserted i
+            ON i.idPresupuesto = dp.idPresupuesto
+        INNER JOIN deleted d
+            ON d.idPresupuesto = i.idPresupuesto
+        WHERE d.estado <> 'Aprobado'
+          AND i.estado = 'Aprobado';
+    END
+END;
+GO
  
-        -- descontar stock de todos los detalles del presupuesto aprobado
-        update dbo.Repuestos
-        set stock = stock - dp.cantidad
-        from dbo.Repuestos r
-        inner join dbo.DetallePresupuesto dp on dp.idRepuesto = r.idRepuesto
-        inner join inserted i on i.idPresupuesto = dp.idPresupuesto
-        where i.estado = 'Aprobado'
-    end
-end
-go
- 
--- TRIGGER 4: se dispara al insertar un detalle nuevo
--- Solo descuenta si el presupuesto ya está 'Aprobado'
+-- TRIGGER 4: se dispara al insertar un detalle nuevo a un presupuesto que ya esta aprobado desde antes.
+-- Solo descuenta si el presupuesto ya está 'Aprobado'!
 go
 create trigger TR_DescontarStock_AlAgregarDetalle
 on dbo.DetallePresupuesto
