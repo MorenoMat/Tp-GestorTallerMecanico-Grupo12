@@ -178,53 +178,72 @@ END;
 
 
 
---TRIGGER 3: TR_DescontarStock
---Al insertar un detalle de presupuesto, descuenta automáticamente la cantidad del stock del repuesto.
---Si el stock es insuficiente, cancela la operación.
+-- TRIGGER 3: se dispara al aprobar el presupuesto
+-- Descuenta stock de todos los detalles ya cargados
 go
-create trigger TR_DescontarStock
-on dbo.DetallePresupuesto
-after insert
-as
-begin
-    -- verificar que haya stock suficiente
-    if exists (
-        select 1
-        from dbo.Repuestos r
-        inner join inserted i on i.idRepuesto = r.idRepuesto
-        where r.stock < i.cantidad
-    )
-    begin
-        raiserror('Stock insuficiente para uno o más repuestos del detalle.', 16, 1)
-        rollback transaction
-        return
-    end
- 
-    -- descontar el stock
-    update dbo.Repuestos
-    set stock = stock - i.cantidad
-    from dbo.Repuestos r
-    inner join inserted i on i.idRepuesto = r.idRepuesto
-end
-go
- 
--- TRIGGER 4: TR_FinalizarPresupuesto
--- Cuando una reparación pasa a estado 'Completada', actualiza automáticamente el estado del presupuesto
--- asociado a 'Finalizado'.
-go
-create trigger TR_FinalizarPresupuesto
-on dbo.Reparaciones
+create trigger TR_DescontarStock_AlAprobar
+on dbo.Presupuestos
 after update
 as
 begin
     if update(estado)
     begin
-        update dbo.Presupuestos
-        set estado = 'Finalizado'
-        from dbo.Presupuestos p
-        inner join inserted i on i.idPresupuesto = p.idPresupuesto
-        where i.estado = 'Completada'
+        -- verificar stock suficiente para todos los detalles existentes
+        if exists (
+            select 1
+            from dbo.DetallePresupuesto dp
+            inner join dbo.Repuestos r on r.idRepuesto = dp.idRepuesto
+            inner join inserted i on i.idPresupuesto = dp.idPresupuesto
+            where i.estado = 'Aprobado'
+            and r.stock < dp.cantidad
+        )
+        begin
+            raiserror('Stock insuficiente para uno o más repuestos del presupuesto.', 16, 1)
+            rollback transaction
+            return
+        end
+ 
+        -- descontar stock de todos los detalles del presupuesto aprobado
+        update dbo.Repuestos
+        set stock = stock - dp.cantidad
+        from dbo.Repuestos r
+        inner join dbo.DetallePresupuesto dp on dp.idRepuesto = r.idRepuesto
+        inner join inserted i on i.idPresupuesto = dp.idPresupuesto
+        where i.estado = 'Aprobado'
     end
+end
+go
+ 
+-- TRIGGER 4: se dispara al insertar un detalle nuevo
+-- Solo descuenta si el presupuesto ya está 'Aprobado'
+go
+create trigger TR_DescontarStock_AlAgregarDetalle
+on dbo.DetallePresupuesto
+after insert
+as
+begin
+    -- verificar stock suficiente solo si el presupuesto está aprobado
+    if exists (
+        select 1
+        from dbo.Repuestos r
+        inner join inserted i on i.idRepuesto = r.idRepuesto
+        inner join dbo.Presupuestos p on p.idPresupuesto = i.idPresupuesto
+        where p.estado = 'Aprobado'
+        and r.stock < i.cantidad
+    )
+    begin
+        raiserror('Stock insuficiente para el repuesto ingresado.', 16, 1)
+        rollback transaction
+        return
+    end
+ 
+    -- descontar stock solo si el presupuesto está aprobado
+    update dbo.Repuestos
+    set stock = stock - i.cantidad
+    from dbo.Repuestos r
+    inner join inserted i on i.idRepuesto = r.idRepuesto
+    inner join dbo.Presupuestos p on p.idPresupuesto = i.idPresupuesto
+    where p.estado = 'Aprobado'
 end
 go
 
