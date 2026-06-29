@@ -301,3 +301,53 @@ THROW;
 END CATCH;
 END;
 GO
+
+-- STORE PROCEDURE AGREGAR DETALLE PRESUPUESTO
+-- AGREGA LOS DETALLES AL PRESUPUESTO DE LOS REPUESTOS CON SUS PRECIO Y CANTIDADES
+
+CREATE PROCEDURE SP_AgregarDetallePresupuesto
+(
+@idPresupuesto INT,
+@idRepuesto INT,
+@descripcionTrabajo VARCHAR(300),
+@cantidad INT,
+@precio DECIMAL(10,2)
+)
+AS 
+BEGIN
+
+BEGIN TRY
+
+IF NOT EXISTS
+(
+SELECT 1
+FROM dbo.Presupuestos
+WHERE idPresupuesto = @idPresupuesto
+)
+BEGIN
+RAISERROR('El presupuesto no existe.',16,1);
+RETURN;
+END
+
+IF NOT EXISTS
+(
+SELECT 1
+FROM dbo.Repuestos
+WHERE idRepuesto = @idRepuesto
+)
+BEGIN
+RAISERROR('El repuesto no existe.',16,1);
+RETURN;
+END
+
+INSERT INTO dbo.DetallePresupuesto
+(idPresupuesto, descripcionTrabajo, idRepuesto, cantidad, precio)
+VALUES (@idPresupuesto, @descripcionTrabajo, @idRepuesto, @cantidad, @precio);
+
+END TRY
+BEGIN CATCH
+THROW;
+END CATCH   
+
+END
+GO
