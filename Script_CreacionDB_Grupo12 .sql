@@ -467,3 +467,21 @@ go
  
 -- select * from VW_ReparacionesEnCurso
 -- select * from VW_ReparacionesEnCurso where Patente = 'AB123CD'
+
+
+-- VISTA 3: VW_RepuestosStockBajo
+-- Muestra los repuestos cuyo stock es menor o igual a 5.
+go
+create view VW_RepuestosStockBajo as
+select
+    idRepuesto,
+    nombreRepuesto,
+    descripcionRepuesto,
+    precio,
+    stock
+from dbo.Repuestos
+where stock <= 5
+go
+ 
+-- select * from VW_RepuestosStockBajo
+-- select * from VW_RepuestosStockBajo order by stock asc
