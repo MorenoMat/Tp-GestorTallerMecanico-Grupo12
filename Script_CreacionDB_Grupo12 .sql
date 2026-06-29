@@ -407,32 +407,6 @@ inner join dbo.Vehiculos  v on v.idVehiculo = p.idVehiculo
 inner join dbo.Clientes   c on c.idCliente  = v.idCliente
 inner join dbo.Mecanicos  m on m.idMecanico = p.idMecanico
 go
-
--- VISTA 1: VW_PresupuestosCompletos
--- Muestra todos los presupuestos con datos del cliente,
--- vehículo, mecánico, importe total y estado.
-
-create view VW_PresupuestosCompletos as
-select
-    p.idPresupuesto,
-    p.fechaPresupuesto,
-    p.fechaEstimadaFin,
-    p.descripcion,
-    p.importeTotal,
-    p.estado,
-    c.Apellido + ', ' + c.Nombre       as nombreCliente,
-    c.Telefono,
-    c.Email,
-    v.Patente,
-    v.Marca,
-    v.Modelo,
-    v.Anio,
-    m.ApellidoMecanico + ', ' + m.nombreMecanico as nombreMecanico
-from dbo.Presupuestos p
-inner join dbo.Vehiculos  v on v.idVehiculo = p.idVehiculo
-inner join dbo.Clientes   c on c.idCliente  = v.idCliente
-inner join dbo.Mecanicos  m on m.idMecanico = p.idMecanico
-go
     
 -- select * from VW_PresupuestosCompletos
 -- select * from VW_PresupuestosCompletos where estado = 'Pendiente'
