@@ -1,0 +1,77 @@
+
+
+USE TallerMecanico;
+GO
+
+-- 1. Clientes
+INSERT INTO dbo.Clientes (DNI, Apellido, Nombre, Telefono, Email, Direccion) VALUES
+    ('30111222', 'Perez',     'Juan',   '1145670001', 'juan.perez@gmail.com',     'Av. Corrientes 1200'),
+    ('28999111', 'Gomez',     'Maria',  '1145670002', 'maria.gomez@gmail.com',    'Belgrano 845'),
+    ('35444555', 'Lopez',     'Carlos', '1145670003', 'carlos.lopez@gmail.com',   'San Martin 230'),
+    ('27333444', 'Fernandez', 'Laura',  '1145670004', 'laura.fernandez@gmail.com','Rivadavia 5600'),
+    ('40222333', 'Diaz',      'Martin', '1145670005', 'martin.diaz@gmail.com',    'Mitre 78'),
+    ('33666777', 'Ruiz',      'Sofia',  '1145670006', 'sofia.ruiz@gmail.com',     'Sarmiento 1450');
+
+-- 2. Mecanicos
+INSERT INTO dbo.Mecanicos (nombreMecanico, ApellidoMecanico) VALUES
+    ('Roberto', 'Alvarez'),
+    ('Diego',   'Sosa'),
+    ('Hernan',  'Ramirez'),
+    ('Pablo',   'Nunez');
+
+-- 3. Repuestos (los de stock <= 5 aparecerán en VW_RepuestosStockBajo)
+INSERT INTO dbo.Repuestos (nombreRepuesto, descripcionRepuesto, precio, stock) VALUES
+    ('Filtro de aceite',       'Filtro de aceite estandar',          3500.00,  50),
+    ('Pastillas de freno',     'Juego de pastillas delanteras',     12000.00,  30),
+    ('Bateria 12V',            'Bateria 12V 65Ah',                  85000.00,  15),
+    ('Bujias',                 'Bujia de encendido (unidad)',        2500.00, 100),
+    ('Correa de distribucion', 'Correa de distribucion reforzada',  28000.00,  12),
+    ('Amortiguador delantero', 'Amortiguador delantero (unidad)',   45000.00,   8),
+    ('Radiador',               'Radiador de aluminio',              95000.00,   4),
+    ('Aceite 10W40',           'Aceite sintetico 10W40 (litro)',     6500.00,   3);
+
+-- 4. Vehiculos
+INSERT INTO dbo.Vehiculos (idCliente, Patente, Marca, Modelo, Anio, Color) VALUES
+    (1, 'AB123CD', 'Ford',      'Focus',   2019, 'Rojo'),
+    (2, 'AC456DE', 'Volkswagen','Gol',     2018, 'Gris'),
+    (3, 'AD789FG', 'Chevrolet', 'Cruze',   2020, 'Blanco'),
+    (4, 'AE012HI', 'Toyota',    'Corolla', 2021, 'Negro'),
+    (5, 'AF345JK', 'Renault',   'Sandero', 2017, 'Azul'),
+    (1, 'AG678LM', 'Fiat',      'Cronos',  2022, 'Blanco');
+
+-- 5. Presupuestos (quedan en 'Pendiente' por defecto)
+INSERT INTO dbo.Presupuestos (idVehiculo, idMecanico, fechaPresupuesto, fechaEstimadaFin, descripcion) VALUES
+    (1, 1, '20260601', '20260610', 'Service completo'),
+    (2, 2, '20260605', '20260612', 'Cambio de pastillas y revision de frenos'),
+    (3, 1, '20260610', '20260620', 'Cambio de bateria y bujias'),
+    (4, 3, '20260615', '20260625', 'Cambio de correa de distribucion'),
+    (5, 4, '20260618', '20260628', 'Revision general'),
+    (6, 2, '20260620', '20260705', 'Cambio de amortiguadores delanteros');
+
+-- 6. DetallePresupuesto (con los presupuestos en 'Pendiente': sólo acumula importe)
+INSERT INTO dbo.DetallePresupuesto (idPresupuesto, descripcionTrabajo, idRepuesto, cantidad, precio) VALUES
+    (1, 'Cambio de filtro de aceite',     1, 1, 3500.00),
+    (1, 'Cambio de bujias',               4, 4, 2500.00),
+    (2, 'Recambio de pastillas de freno', 2, 2, 12000.00),
+    (3, 'Cambio de bateria',              3, 1, 85000.00),
+    (3, 'Cambio de bujias',               4, 4, 2500.00),
+    (4, 'Cambio de correa',               5, 1, 28000.00),
+    (5, 'Cambio de filtro de aceite',     1, 1, 3500.00),
+    (5, 'Relleno de aceite',              8, 3, 6500.00),
+    (6, 'Cambio de amortiguadores',       6, 2, 45000.00);
+
+-- 7. Reparaciones (derivadas de presupuestos aprobados en el script de pruebas)
+-- Quedan en 'En Progreso' por defecto
+INSERT INTO dbo.Reparaciones (idPresupuesto, fechaInicio, descripcionTrabajo) VALUES
+    (1, '20260611', 'Service completo en ejecucion'),
+    (2, '20260613', 'Recambio de frenos'),
+    (6, '20260622', 'Cambio de amortiguadores delanteros');
+
+-- 8. Asignacion de mecanicos a cada reparacion (relacion N:M)
+INSERT INTO dbo.ReparacionMecanicos (idReparacion, idMecanico, descripcion) VALUES
+    (1, 1, 'Mecanico a cargo del service completo'),
+    (2, 2, 'Mecanico a cargo del recambio de frenos'),
+    (3, 2, 'Mecanico a cargo del cambio de amortiguadores'),
+    (3, 3, 'Mecanico auxiliar en cambio de amortiguadores');
+
+GO
