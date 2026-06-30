@@ -123,9 +123,8 @@ CREATE TABLE dbo.ReparacionMecanicos
     fechaFin DATE,
     
     FOREIGN KEY(idReparacion) REFERENCES dbo.Reparaciones(idReparacion),
-    FOREIGN KEY(idMecanico) REFERENCES dbo.Mecanicos(idMecanico),
-    ALTER TABLE dbo.TareasReparacion 
-ADD CONSTRAINT UQ_Mecanico_Reparacion_Tarea 
+    FOREIGN KEY(idMecanico) REFERENCES dbo.Mecanicos(idMecanico), 
+ CONSTRAINT UQ_Mecanico_Reparacion_Tarea 
 UNIQUE (idReparacion, idMecanico, descripcion);
 )
 
@@ -169,7 +168,7 @@ END;
 
 -- TRIGGER 3: se dispara al aprobar el presupuesto!
 -- Descuenta stock de todos los detalles ya cargados!
-
+go
 CREATE TRIGGER TR_DescontarStock_AlAprobar
 ON dbo.Presupuestos
 AFTER UPDATE
