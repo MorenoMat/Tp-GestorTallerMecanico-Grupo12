@@ -123,7 +123,10 @@ CREATE TABLE dbo.ReparacionMecanicos
     fechaFin DATE,
     
     FOREIGN KEY(idReparacion) REFERENCES dbo.Reparaciones(idReparacion),
-    FOREIGN KEY(idMecanico) REFERENCES dbo.Mecanicos(idMecanico)
+    FOREIGN KEY(idMecanico) REFERENCES dbo.Mecanicos(idMecanico),
+    ALTER TABLE dbo.TareasReparacion 
+ADD CONSTRAINT UQ_Mecanico_Reparacion_Tarea 
+UNIQUE (idReparacion, idMecanico, descripcion);
 )
 
 
