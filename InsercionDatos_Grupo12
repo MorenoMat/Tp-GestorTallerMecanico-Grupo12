@@ -21,14 +21,17 @@ INSERT INTO dbo.Mecanicos (nombreMecanico, ApellidoMecanico) VALUES
 
 -- 3. Repuestos (los de stock <= 5 aparecerán en VW_RepuestosStockBajo)
 INSERT INTO dbo.Repuestos (nombreRepuesto, descripcionRepuesto, precio, stock) VALUES
-    ('Filtro de aceite',       'Filtro de aceite estandar',          3500.00,  50),
-    ('Pastillas de freno',     'Juego de pastillas delanteras',     12000.00,  30),
-    ('Bateria 12V',            'Bateria 12V 65Ah',                  85000.00,  15),
-    ('Bujias',                 'Bujia de encendido (unidad)',        2500.00, 100),
-    ('Correa de distribucion', 'Correa de distribucion reforzada',  28000.00,  12),
-    ('Amortiguador delantero', 'Amortiguador delantero (unidad)',   45000.00,   8),
-    ('Radiador',               'Radiador de aluminio',              95000.00,   4),
-    ('Aceite 10W40',           'Aceite sintetico 10W40 (litro)',     6500.00,   3);
+    ('Filtro de aceite',       'Filtro de aceite estandar',          3500.00,  50),      -- ID 1
+    ('Pastillas de freno',     'Juego de pastillas delanteras',     12000.00,  30),     -- ID 2
+    ('Bateria 12V',            'Bateria 12V 65Ah',                  85000.00,  15),     -- ID 3
+    ('Bujias',                 'Bujia de encendido (unidad)',        2500.00, 100),     -- ID 4
+    ('Correa de distribucion', 'Correa de distribucion reforzada',  28000.00,  12),     -- ID 5
+    ('Amortiguador delantero', 'Amortiguador delantero (unidad)',   45000.00,   8),     -- ID 6
+    ('Radiador',               'Radiador de aluminio',              95000.00,   4),     -- ID 7
+    ('Aceite 10W40',           'Aceite sintetico 10W40 (litro)',     6500.00,   3),     -- ID 8
+    ('Filtro de aire',         'Filtro de aire motor',               1500.00,  20),     -- ID 9 (nuevo)
+    ('Disco de freno',         'Disco de freno ventilado',          15000.00,  18),    -- ID 10 (nuevo)
+    ('Aceite motor 5W-30',     'Aceite mineral 5W-30 (litro)',       4500.00,  60);    -- ID 11 (nuevo)
 
 -- 4. Vehiculos
 INSERT INTO dbo.Vehiculos (idCliente, Patente, Marca, Modelo, Anio, Color) VALUES
