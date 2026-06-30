@@ -266,7 +266,7 @@ CREATE PROCEDURE SP_RegistrarPresupuesto
     @Color VARCHAR(30),
 
     @IdMecanico INT,
-    @FechaEstimadaFin DATE = NULL,
+    @FechaEstimadaFin DATE,
     @Descripcion VARCHAR(400)
 )
 AS
