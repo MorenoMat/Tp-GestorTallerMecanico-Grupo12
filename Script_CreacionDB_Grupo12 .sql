@@ -112,35 +112,22 @@ constraint UQ_DetallePresupuesto
 unique(idPresupuesto,idRepuesto)
 )
 
-create table dbo.ReparacionMecanicos
+
+CREATE TABLE dbo.ReparacionMecanicos
 (
-    idReparacion int not null,
-    idMecanico int not null,
-
-    primary key(idReparacion,idMecanico),
-
-    foreign key(idReparacion)
-        references dbo.Reparaciones(idReparacion),
-
-    foreign key(idMecanico)
-        references dbo.Mecanicos(idMecanico)
+    idTarea INT IDENTITY(1,1) PRIMARY KEY, -- Nueva PK
+    idReparacion INT NOT NULL,
+    idMecanico INT NOT NULL,
+    descripcion VARCHAR(300) NOT NULL,
+    fechaInicio DATE,
+    fechaFin DATE,
+    
+    FOREIGN KEY(idReparacion) REFERENCES dbo.Reparaciones(idReparacion),
+    FOREIGN KEY(idMecanico) REFERENCES dbo.Mecanicos(idMecanico)
 )
 
-create table dbo.TareasReparacion
-(
-    idTarea int identity(1,1) primary key,
-    idReparacion int not null,
-    idMecanico int not null,
 
-    descripcion varchar(300) not null,
-    fechaInicio date,
-    fechaFin date,
-
-foreign key(idReparacion, idMecanico)
-    references dbo.ReparacionMecanicos(idReparacion, idMecanico),
-constraint CK_TareasReparacion_Fechas
-    check (fechaFin is null or fechaInicio is null or fechaFin >= fechaInicio)
-)
+    
 go
     
 --TRIGGER 1
