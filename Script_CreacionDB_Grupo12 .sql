@@ -125,7 +125,7 @@ CREATE TABLE dbo.ReparacionMecanicos
     FOREIGN KEY(idReparacion) REFERENCES dbo.Reparaciones(idReparacion),
     FOREIGN KEY(idMecanico) REFERENCES dbo.Mecanicos(idMecanico), 
  CONSTRAINT UQ_Mecanico_Reparacion_Tarea 
-UNIQUE (idReparacion, idMecanico, descripcion);
+UNIQUE (idReparacion, idMecanico, descripcion)
 )
 
 
@@ -237,8 +237,8 @@ begin
     end
  
     -- descontar stock solo si el presupuesto está aprobado
-    update dbo.Repuestos
-    set stock = stock - i.cantidad
+    update r
+    set r.stock = stock - i.cantidad
     from dbo.Repuestos r
     inner join inserted i on i.idRepuesto = r.idRepuesto
     inner join dbo.Presupuestos p on p.idPresupuesto = i.idPresupuesto
